@@ -23,6 +23,7 @@ class Query(graphene.ObjectType):
             if search:
                 filter = (
                     Q(title__icontains=search) |
+                    Q(genre_icontains=genre) |
                     Q(description__icontains=search) |
                     Q(url__icontains=search) |
                     Q(posted_by__username__icontains=search)
@@ -39,16 +40,17 @@ class CreateTrack(graphene.Mutation):
 
     class Arguments:
         title = graphene.String()
+        genre = graphene.String()
         description = graphene.String()
         url = graphene.String()
 
-    def mutate(self, info, title, description, url):
+    def mutate(self, info, title, genre, description, url):
         user = info.context.user
 
         if user.is_anonymous:
             raise GraphQLError('Log in to add a track')
         
-        track = Track(title=title, description=description, url=url, posted_by=user)
+        track = Track(title=title, genre=genre, description=description, url=url, posted_by=user)
         track.save()
         return CreateTrack(track=track)
 
@@ -58,10 +60,11 @@ class UpdateTrack(graphene.Mutation):
     class Arguments:
         track_id = graphene.Int(required=True)
         title = graphene.String()
+        genre = graphene.String()
         description = graphene.String()
         url = graphene.String()
 
-    def mutate(self, info, track_id, title, url, description):
+    def mutate(self, info, track_id, title, genre, url, description):
 
         user = info.context.user
         track = Track.objects.get(id=track_id)
@@ -70,6 +73,7 @@ class UpdateTrack(graphene.Mutation):
             raise GraphQLError("Not permitted to update track.")
 
         track.title = title
+        track.genre = genre
         track.description = description
         track.url = url
 

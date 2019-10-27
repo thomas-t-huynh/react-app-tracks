@@ -7,6 +7,7 @@ from django.contrib.auth import get_user_model
 class Track(models.Model):
     title = models.CharField(max_length=50)
     description = models.TextField(blank=True)
+    genre = models.CharField(max_length=30, default="")
     url = models.URLField()
     created_at = models.DateTimeField(auto_now_add=True)
     posted_by = models.ForeignKey(get_user_model(), null=True, on_delete=models.CASCADE)
