@@ -15,3 +15,10 @@ class Track(models.Model):
 class Like(models.Model):
     user = models.ForeignKey(get_user_model(), null=True, on_delete=models.CASCADE)
     track = models.ForeignKey('tracks.Track', related_name='likes', on_delete=models.CASCADE)
+
+class Comment(models.Model):
+    comment = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    music_time = models.IntegerField()
+    posted_by = models.ForeignKey(get_user_model(), null=True, on_delete=models.CASCADE)
+    track = models.ForeignKey('tracks.Track', related_name='comments', on_delete=models.CASCADE)

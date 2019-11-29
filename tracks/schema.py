@@ -3,7 +3,7 @@ from graphene_django import DjangoObjectType
 from graphql import GraphQLError
 from django.db.models import Q
 
-from .models import Track, Like
+from .models import Track, Like, Comment
 from users.schema import UserType
 
 
@@ -15,9 +15,14 @@ class LikeType(DjangoObjectType):
     class Meta:
         model = Like
 
+class CommentType(DjangoObjectType):
+    class Meta:
+        model = Comment
+
 class Query(graphene.ObjectType):
         tracks = graphene.List(TrackType, search=graphene.String())
         likes = graphene.List(LikeType)
+        comments = graphene.List(CommentType)
 
         def resolve_tracks(self, info, search=None):
             if search:
@@ -34,6 +39,9 @@ class Query(graphene.ObjectType):
 
         def resolve_likes(self, info):
             return Like.objects.all()
+        
+        def resolve_comments(self, info):
+            return Comment.objects.all()
 
 class CreateTrack(graphene.Mutation):
     track = graphene.Field(TrackType)
@@ -120,9 +128,35 @@ class CreateLike(graphene.Mutation):
         )
 
         return CreateLike(user=user, track=track)
+
+class CreateComment(graphene.Mutation):
+    comment = graphene.Field(TrackType)
+    track = graphene.Field(TrackType)
+    posted_by = graphene.Field(UserType)
+    music_time = graphene.Field(TrackType)
+
+    class Arguments:
+        comment = graphene.String()
+        track_id = graphene.Int(required=True)
+        music_time = graphene.Int(required=True)
+
+    def mutate(self, info, comment, track_id, music_time):
+        user = info.context.user
+
+        if user.is_anonymous:
+            raise GraphQLError('Log in to add a comment')
+
+        track = Track.objects.get(id=track_id)
+        if not track:
+            raise GraphQLError('Cannot find track with given track id.')
+        
+        Comment.objects.create(track=track, comment=comment, posted_by=user, music_time=music_time)
+        
+        return CreateComment(track=track, comment=comment, posted_by=user, music_time=music_time)
     
 class Mutation(graphene.ObjectType):
     create_track = CreateTrack.Field()
     update_track = UpdateTrack.Field()
     delete_track = DeleteTrack.Field()
     create_like = CreateLike.Field()
+    create_comment = CreateComment.Field()
