@@ -153,6 +153,19 @@ class CreateComment(graphene.Mutation):
         Comment.objects.create(track=track, comment=comment, posted_by=user, music_time=music_time)
         
         return CreateComment(track=track, comment=comment, posted_by=user, music_time=music_time)
+
+class DeleteComment(graphene.Mutation):
+    comment_id = graphene.Int()
+
+    class Arguments:
+        comment_id = graphene.Int(required=True)
+    
+    def mutate(self, info, comment_id):
+        comment = Comment.objects.get(id=comment_id)
+
+        comment.delete()
+
+        return DeleteComment(comment_id=comment_id)
     
 class Mutation(graphene.ObjectType):
     create_track = CreateTrack.Field()
@@ -160,3 +173,4 @@ class Mutation(graphene.ObjectType):
     delete_track = DeleteTrack.Field()
     create_like = CreateLike.Field()
     create_comment = CreateComment.Field()
+    delete_comment = DeleteComment.Field()
